@@ -16,7 +16,7 @@ public class ServiceValidator : IServiceValidator
         _serviceProvider = serviceProvider;
     }
 
-    public async Task<Result> Validate<T>(T request)
+    public async Task<Result> Validate<T>(T request, CancellationToken cancellationToken)
     {
         var validator = (IValidator<T>?)_serviceProvider.GetService(typeof(IValidator<T>));
 
@@ -25,7 +25,7 @@ public class ServiceValidator : IServiceValidator
             return Result.Success();
         }
 
-        var result = await validator.ValidateAsync(request);
+        var result = await validator.ValidateAsync(request, cancellationToken);
 
         if (result.IsValid)
         {
