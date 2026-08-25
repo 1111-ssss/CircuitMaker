@@ -1,8 +1,8 @@
-namespace DataAccess.Entities;
+namespace DAL.Entities;
 
 public class CircuitNode
 {
-    public Guid Id { get; set; }
+    public string Id { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
     public double X { get; set; }
     public double Y { get; set; }
