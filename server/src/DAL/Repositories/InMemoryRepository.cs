@@ -1,19 +1,20 @@
 using System.Collections.Concurrent;
 using DAL.Interfaces;
 using DAL.Entities;
+using DAL.Constraints;
 
 namespace DAL.Repositories;
 
 public class InMemoryRepository : ICircuitRepository
 {
-    private readonly ConcurrentDictionary<Guid, Circuit> _circuits = new();
+    private readonly ConcurrentDictionary<string, Circuit> _circuits = new();
     private readonly ConcurrentDictionary<string, ConcurrentBag<string>> _roomNames = new();
 
     public Circuit Create(string name, string createdBy, CircuitSettings settings)
     {
         var circuit = new Circuit
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.NewGuid().ToString("N"),
             Name = name,
             CreatedBy = createdBy,
             Settings = settings
@@ -23,7 +24,7 @@ public class InMemoryRepository : ICircuitRepository
         return circuit;
     }
 
-    public Circuit? GetById(Guid id)
+    public Circuit? GetById(string id)
     {
         _circuits.TryGetValue(id, out var circuit);
 
@@ -35,7 +36,7 @@ public class InMemoryRepository : ICircuitRepository
         return _circuits.Values;
     }
 
-    public bool AddUser(Guid circuitId, User user)
+    public bool AddUser(string circuitId, User user)
     {
         if (!_circuits.TryGetValue(circuitId, out var circuit)) 
         {
@@ -52,7 +53,7 @@ public class InMemoryRepository : ICircuitRepository
         return true;
     }
 
-    public bool RemoveUser(Guid circuitId, Guid connectionId, out User? removedUser)
+    public bool RemoveUser(string circuitId, string connectionId, out User? removedUser)
     {
         removedUser = null;
         if (_circuits.TryGetValue(circuitId, out var circuit))
@@ -69,7 +70,7 @@ public class InMemoryRepository : ICircuitRepository
         return false;
     }
 
-    public void UpdateNodes(Guid circuitId, List<CircuitNode> nodes)
+    public void UpdateNodes(string circuitId, List<CircuitNode> nodes)
     {
         if (_circuits.TryGetValue(circuitId, out var circuit))
         {
@@ -77,7 +78,7 @@ public class InMemoryRepository : ICircuitRepository
         }
     }
 
-    public void UpdateEdges(Guid circuitId, List<CircuitEdge> edges)
+    public void UpdateEdges(string circuitId, List<CircuitEdge> edges)
     {
         if (_circuits.TryGetValue(circuitId, out var circuit))
         {
@@ -96,7 +97,7 @@ public class InMemoryRepository : ICircuitRepository
             return rawName;
         }
 
-        int counter = 2;
+        int counter = CircuitRepositoryConstraints.UNIQUE_NAME_START_COUNTER;
         while (existingNames.Contains($"{rawName} {counter}"))
         {
             counter++;

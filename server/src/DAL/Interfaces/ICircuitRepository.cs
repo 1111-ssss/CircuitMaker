@@ -5,10 +5,10 @@ namespace DAL.Interfaces;
 public interface ICircuitRepository
 {
     Circuit Create(string name, string createdBy, CircuitSettings settings);
-    Circuit? GetById(Guid id);
+    Circuit? GetById(string id);
     IEnumerable<Circuit> GetAll();
-    bool AddUser(Guid circuitId, User user);
-    bool RemoveUser(Guid circuitId, Guid connectionId, out User? removedUser);
-    void UpdateNodes(Guid circuitId, List<CircuitNode> nodes);
-    void UpdateEdges(Guid circuitId, List<CircuitEdge> edges);
+    bool AddUser(string circuitId, User user);
+    bool RemoveUser(string circuitId, string connectionId, out User? removedUser);
+    void UpdateNodes(string circuitId, List<CircuitNode> nodes);
+    void UpdateEdges(string circuitId, List<CircuitEdge> edges);
 }

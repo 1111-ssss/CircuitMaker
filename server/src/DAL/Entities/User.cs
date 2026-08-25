@@ -2,8 +2,8 @@ namespace DAL.Entities;
 
 public class User
 {
-    public Guid ConnectionId { get; set; }
+    public string ConnectionId { get; set; } = string.Empty;
     public string RawName { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;
-    public Guid? CurrentCircuitId { get; set; }
+    public string? CurrentCircuitId { get; set; }
 }
