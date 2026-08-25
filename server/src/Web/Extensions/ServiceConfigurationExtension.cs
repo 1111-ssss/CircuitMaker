@@ -1,5 +1,6 @@
 using BLL.Interfaces;
 using BLL.Services;
+using FluentValidation;
 
 namespace Web.Extensions;
 
@@ -15,6 +16,7 @@ public static class ServiceConfigurationExtension
 
         // Business Logic Layer
         services.AddScoped<ICircuitService, CircuitService>();
+        services.AddScoped<IServiceValidator, ServiceValidator>();
 
         // CORS, SignalR
         services.AddCors(options =>
@@ -27,6 +29,8 @@ public static class ServiceConfigurationExtension
                     .AllowCredentials();
             });
         });
+
+        services.AddValidatorsFromAssembly(typeof(IServiceValidator).Assembly);
 
         return services;
     }
