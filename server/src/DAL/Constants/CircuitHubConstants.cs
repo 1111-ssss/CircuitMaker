@@ -8,4 +8,6 @@ public static class CircuitHubConstants
     public const string EdgesUpdatedMethod = "EdgesUpdated";
     public const string CursorMovedMethod = "CursorMoved";
     public const string UserLeftMethod = "UserLeft";
+    public const string SignalStateUpdated = "SignalStateUpdated";
+    public const string SettingsUpdated = "SettingsUpdated";
 }

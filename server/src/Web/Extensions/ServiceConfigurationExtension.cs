@@ -19,6 +19,7 @@ public static class ServiceConfigurationExtension
         // Business Logic Layer
         services.AddScoped<ICircuitService, CircuitService>();
         services.AddScoped<IServiceValidator, ServiceValidator>();
+        services.AddScoped<ILogicSimulationService, LogicSimulationService>();
 
         // CORS, SignalR
         services.AddCors(options =>
