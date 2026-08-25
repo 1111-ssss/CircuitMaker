@@ -1,5 +1,7 @@
 using BLL.Interfaces;
 using BLL.Services;
+using DAL.Interfaces;
+using DAL.Repositories;
 using FluentValidation;
 
 namespace Web.Extensions;
@@ -12,7 +14,7 @@ public static class ServiceConfigurationExtension
         services.AddOpenApi();
 
         // Data Access Layer
-        services.AddScoped<ICircuitService, CircuitService>();
+        services.AddSingleton<ICircuitRepository, InMemoryRepository>();
 
         // Business Logic Layer
         services.AddScoped<ICircuitService, CircuitService>();
