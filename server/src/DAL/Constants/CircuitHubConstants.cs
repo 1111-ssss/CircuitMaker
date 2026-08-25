@@ -1,6 +1,6 @@
-namespace DAL.Constraints;
+namespace DAL.Constants;
 
-public static class CircuitHubConstraints
+public static class CircuitHubConstants
 {
     public const string JoinedCircuitMethod = "JoinedCircuit";
     public const string UserJoinedMethod = "UserJoined";

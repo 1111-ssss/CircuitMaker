@@ -1,5 +1,5 @@
 using BLL.Interfaces;
-using DAL.Constraints;
+using DAL.Constants;
 using DAL.Entities;
 using Microsoft.AspNetCore.SignalR;
 
@@ -26,7 +26,7 @@ public class CircuitHub : Hub
         await Groups.AddToGroupAsync(Context.ConnectionId, circuitId);
 
         await Clients.Caller.SendAsync(
-            CircuitHubConstraints.JoinedCircuitMethod,
+            CircuitHubConstants.JoinedCircuitMethod,
             new {
                 AssignedName = user.DisplayName, 
                 Circuit = circuit 
@@ -34,7 +34,7 @@ public class CircuitHub : Hub
         );
 
         await Clients.OthersInGroup(circuitId).SendAsync(
-            CircuitHubConstraints.UserJoinedMethod,
+            CircuitHubConstants.UserJoinedMethod,
             user
         );
     }
@@ -44,7 +44,7 @@ public class CircuitHub : Hub
         _circuitService.SyncNodes(circuitId, nodes);
 
         await Clients.OthersInGroup(circuitId).SendAsync(
-            CircuitHubConstraints.NodesUpdatedMethod,
+            CircuitHubConstants.NodesUpdatedMethod,
             nodes
         );
     }
