@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using DAL.Interfaces;
 using DAL.Entities;
-using DAL.Constraints;
+using DAL.Constants;
 
 namespace DAL.Repositories;
 
@@ -97,7 +97,7 @@ public class InMemoryRepository : ICircuitRepository
             return rawName;
         }
 
-        int counter = CircuitRepositoryConstraints.UNIQUE_NAME_START_COUNTER;
+        int counter = CircuitRepositoryConstants.UNIQUE_NAME_START_COUNTER;
         while (existingNames.Contains($"{rawName} {counter}"))
         {
             counter++;
