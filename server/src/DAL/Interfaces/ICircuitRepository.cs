@@ -1,4 +1,4 @@
-using DataAccess.Entities;
+using DAL.Entities;
 
 namespace DAL.Interfaces;
 

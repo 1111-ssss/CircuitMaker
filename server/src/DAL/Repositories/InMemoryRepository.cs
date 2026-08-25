@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 using DAL.Interfaces;
-using DataAccess.Entities;
+using DAL.Entities;
 
 namespace DAL.Repositories;
 
