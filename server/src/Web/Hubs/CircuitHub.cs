@@ -1,3 +1,4 @@
+using BLL.Contracts;
 using BLL.Interfaces;
 using DAL.Constants;
 using DAL.Entities;
@@ -14,12 +15,19 @@ public class CircuitHub : Hub
         _circuitService = circuitService;
     }
 
-    public async Task JoinCircuit(string circuitId, string rawName)
+    public async Task JoinCircuit(string circuitId, string rawName, CancellationToken cancellationToken = default)
     {
-        var user = _circuitService.Join(circuitId, Context.ConnectionId, rawName);
-        var circuit = _circuitService.Get(circuitId);
+        var user = await _circuitService.Join(
+            new JoinCircuitRequest(circuitId, Context.ConnectionId, rawName),
+            cancellationToken
+        );
 
-        if (circuit == null) {
+        var circuit = await _circuitService.Get(
+            new GetCircuitRequest(circuitId),
+            cancellationToken
+        );
+
+        if (circuit.Value is null || user.Value is null) {
             return;
         }
 
@@ -28,7 +36,7 @@ public class CircuitHub : Hub
         await Clients.Caller.SendAsync(
             CircuitHubConstants.JoinedCircuitMethod,
             new {
-                AssignedName = user.DisplayName, 
+                AssignedName = user.Value.DisplayName,
                 Circuit = circuit 
             }
         );
@@ -39,9 +47,9 @@ public class CircuitHub : Hub
         );
     }
 
-    public async Task UpdateNodes(string circuitId, List<CircuitNode> nodes)
+    public async Task UpdateNodes(string circuitId, List<CircuitNode> nodes, CancellationToken cancellationToken = default)
     {
-        _circuitService.SyncNodes(circuitId, nodes);
+        await _circuitService.SyncNodes(new SyncNodesRequest(circuitId, nodes), cancellationToken);
 
         await Clients.OthersInGroup(circuitId).SendAsync(
             CircuitHubConstants.NodesUpdatedMethod,
@@ -49,15 +57,15 @@ public class CircuitHub : Hub
         );
     }
 
-    public async Task UpdateEdges(string circuitId, List<CircuitEdge> edges)
+    public async Task UpdateEdges(string circuitId, List<CircuitEdge> edges, CancellationToken cancellationToken = default)
     {
-        _circuitService.SyncEdges(circuitId, edges);
-        await Clients.OthersInGroup(circuitId).SendAsync("EdgesUpdated", edges);
+        await _circuitService.SyncEdges(new SyncEdgesRequest(circuitId, edges), cancellationToken);
+        await Clients.OthersInGroup(circuitId).SendAsync(CircuitHubConstants.EdgesUpdatedMethod, edges);
     }
 
     public async Task SendCursorPosition(string circuitId, double x, double y)
     {
-        await Clients.OthersInGroup(circuitId).SendAsync("CursorMoved", new {
+        await Clients.OthersInGroup(circuitId).SendAsync(CircuitHubConstants.CursorMovedMethod, new {
             ConnectionId = Context.ConnectionId,
             X = x,
             Y = y
@@ -66,10 +74,10 @@ public class CircuitHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        var user = _circuitService.Leave(Context.ConnectionId);
-        if (user != null && user.CurrentCircuitId != null)
+        var user = await _circuitService.Leave(new LeaveCircuitRequest(Context.ConnectionId));
+        if (user.Value is not null && user.Value.CurrentCircuitId != null)
         {
-            await Clients.Group(user.CurrentCircuitId).SendAsync("UserLeft", Context.ConnectionId);
+            await Clients.Group(user.Value.CurrentCircuitId).SendAsync(CircuitHubConstants.UserLeftMethod, Context.ConnectionId);
         }
 
         await base.OnDisconnectedAsync(exception);

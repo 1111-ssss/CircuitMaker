@@ -1,4 +1,5 @@
 using BLL.Interfaces;
+using BLL.ResultPattern.Constants;
 using BLL.ResultPattern.Model;
 using FluentValidation;
 
@@ -6,7 +7,6 @@ namespace BLL.Services;
 
 public class ServiceValidator : IServiceValidator
 {
-    private const string VALIDATION_FAILED_CODE = "ValidationFailed";
     private const string VALIDATION_FAILED_MESSAGE = "Validation failed: {0}";
 
     private readonly IServiceProvider _serviceProvider;
@@ -16,7 +16,7 @@ public class ServiceValidator : IServiceValidator
         _serviceProvider = serviceProvider;
     }
 
-    public async Task<Result> Validate<T>(T request, CancellationToken cancellationToken)
+    public async Task<Result> Validate<T>(T request, CancellationToken cancellationToken = default)
     {
         var validator = (IValidator<T>?)_serviceProvider.GetService(typeof(IValidator<T>));
 
@@ -32,12 +32,12 @@ public class ServiceValidator : IServiceValidator
             return Result.Success();
         }
 
-        return Result.Failure(new Error(
-            VALIDATION_FAILED_CODE,
-            string.Format(
-                VALIDATION_FAILED_MESSAGE, 
+        return Result.Failure(Errors.ValidationFailed with
+        {
+            Message = string.Format(
+                VALIDATION_FAILED_MESSAGE,
                 result.Errors.First().ErrorMessage
             )
-        ));
+        });
     }
 }

@@ -20,7 +20,7 @@ public class CircuitService : ICircuitService
         _validator = validator;
     }
 
-    public async Task<Result<Circuit>> Create(CreateCircuitRequest request, CancellationToken cancellationToken)
+    public async Task<Result<Circuit>> Create(CreateCircuitRequest request, CancellationToken cancellationToken = default)
     {
         var validationResult = await _validator.Validate(request, cancellationToken);
         if (!validationResult.IsSuccess)
@@ -37,7 +37,7 @@ public class CircuitService : ICircuitService
         return Result<Circuit>.Success(circuit);
     }
 
-    public async Task<Result<Circuit?>> Get(GetCircuitRequest request, CancellationToken cancellationToken)
+    public async Task<Result<Circuit?>> Get(GetCircuitRequest request, CancellationToken cancellationToken = default)
     {
         var validationResult = await _validator.Validate(request, cancellationToken);
         if (!validationResult.IsSuccess)
@@ -55,7 +55,7 @@ public class CircuitService : ICircuitService
         return Result<IEnumerable<Circuit>>.Success(_repository.GetAll());
     }
 
-    public async Task<Result<User>> Join(JoinCircuitRequest request, CancellationToken cancellationToken)
+    public async Task<Result<User>> Join(JoinCircuitRequest request, CancellationToken cancellationToken = default)
     {
         var validationResult = await _validator.Validate(request, cancellationToken);
         if (!validationResult.IsSuccess)
@@ -69,7 +69,7 @@ public class CircuitService : ICircuitService
         return Result<User>.Success(user);
     }
 
-    public async Task<Result<User?>> Leave(LeaveCircuitRequest request, CancellationToken cancellationToken)
+    public async Task<Result<User?>> Leave(LeaveCircuitRequest request, CancellationToken cancellationToken = default)
     {
         var validationResult = await _validator.Validate(request, cancellationToken);
         if (!validationResult.IsSuccess)
@@ -90,7 +90,7 @@ public class CircuitService : ICircuitService
         return Result<User?>.Success(null);
     }
     
-    public async Task<Result> SyncNodes(SyncNodesRequest request, CancellationToken cancellationToken)
+    public async Task<Result> SyncNodes(SyncNodesRequest request, CancellationToken cancellationToken = default)
     {
         var validationResult = await _validator.Validate(request, cancellationToken);
         if (!validationResult.IsSuccess)
@@ -102,7 +102,7 @@ public class CircuitService : ICircuitService
         return Result.Success();
     }
 
-    public async Task<Result> SyncEdges(SyncEdgesRequest request, CancellationToken cancellationToken)
+    public async Task<Result> SyncEdges(SyncEdgesRequest request, CancellationToken cancellationToken = default)
     {
         var validationResult = await _validator.Validate(request, cancellationToken);
         if (!validationResult.IsSuccess)
