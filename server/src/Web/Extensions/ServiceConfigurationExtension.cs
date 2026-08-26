@@ -8,7 +8,7 @@ namespace Web.Extensions;
 
 public static class ServiceConfigurationExtension
 {
-    public static IServiceCollection AddServiceConfiguration(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddServiceConfiguration(this IServiceCollection services)
     {
         services.AddLogging();
         services.AddOpenApi();
@@ -19,6 +19,7 @@ public static class ServiceConfigurationExtension
         // Business Logic Layer
         services.AddScoped<ICircuitService, CircuitService>();
         services.AddScoped<IServiceValidator, ServiceValidator>();
+        services.AddScoped<ILogicSimulationService, LogicSimulationService>();
 
         // CORS, SignalR
         services.AddCors(options =>
@@ -30,6 +31,11 @@ public static class ServiceConfigurationExtension
                     .AllowAnyMethod()
                     .AllowCredentials();
             });
+        });
+
+        services.AddSignalR(options =>
+        {
+            options.EnableDetailedErrors = true;
         });
 
         services.AddValidatorsFromAssembly(typeof(IServiceValidator).Assembly);

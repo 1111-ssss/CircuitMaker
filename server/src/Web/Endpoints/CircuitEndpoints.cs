@@ -10,7 +10,7 @@ public static class CircuitEndpoints
 {
     public static WebApplication MapCircuitEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/circuits");
+        var group = app.MapGroup("/api/circuits");
 
         group.MapGet("", GetCircuits);
 
