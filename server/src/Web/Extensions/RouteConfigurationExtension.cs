@@ -9,7 +9,7 @@ public static class RouteConfigurationExtension
     {
         app.MapCircuitEndpoints();
 
-        app.MapHub<CircuitHub>("/hubs/circuit");
+        app.MapHub<CircuitHub>("/api/circuitHub");
 
         return app;
     }

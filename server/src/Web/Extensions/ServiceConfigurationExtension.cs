@@ -8,7 +8,7 @@ namespace Web.Extensions;
 
 public static class ServiceConfigurationExtension
 {
-    public static IServiceCollection AddServiceConfiguration(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddServiceConfiguration(this IServiceCollection services)
     {
         services.AddLogging();
         services.AddOpenApi();
@@ -31,6 +31,11 @@ public static class ServiceConfigurationExtension
                     .AllowAnyMethod()
                     .AllowCredentials();
             });
+        });
+
+        services.AddSignalR(options =>
+        {
+            options.EnableDetailedErrors = true;
         });
 
         services.AddValidatorsFromAssembly(typeof(IServiceValidator).Assembly);

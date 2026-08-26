@@ -1,8 +1,8 @@
 using BLL.Contracts;
 using BLL.Interfaces;
-using DAL.Constants;
 using DAL.Entities;
 using Microsoft.AspNetCore.SignalR;
+using DAL.Constants;
 
 namespace Web.Hubs;
 
@@ -20,16 +20,18 @@ public class CircuitHub : Hub
         _logicSimulationService = logicSimulationService;
     }
 
-    public async Task JoinCircuit(string circuitId, string rawName, CancellationToken cancellationToken = default)
+    public async Task JoinCircuit(string circuitId, string rawName)
     {
+        var ct = Context.ConnectionAborted;
+
         var user = await _circuitService.Join(
             new JoinCircuitRequest(circuitId, Context.ConnectionId, rawName),
-            cancellationToken
+            ct
         );
 
         var circuit = await _circuitService.Get(
             new GetCircuitRequest(circuitId),
-            cancellationToken
+            ct
         );
 
         if (circuit.Value is null || user.Value is null)
@@ -37,7 +39,7 @@ public class CircuitHub : Hub
             return;
         }
 
-        await Groups.AddToGroupAsync(Context.ConnectionId, circuitId);
+        await Groups.AddToGroupAsync(Context.ConnectionId, circuitId, ct);
 
         await Clients.Caller.SendAsync(
             CircuitHubConstants.JoinedCircuitMethod,
@@ -45,31 +47,86 @@ public class CircuitHub : Hub
             {
                 AssignedName = user.Value.DisplayName,
                 Circuit = circuit
-            }
+            },
+            cancellationToken: ct
         );
 
         await Clients.OthersInGroup(circuitId).SendAsync(
             CircuitHubConstants.UserJoinedMethod,
-            user
+            user,
+            cancellationToken: ct
         );
     }
 
-    public async Task UpdateNodes(string circuitId, List<CircuitNode> nodes, CancellationToken cancellationToken = default)
+    public async Task UpdateNodes(string circuitId, List<CircuitNode> nodes)
     {
-        await _circuitService.SyncNodes(new SyncNodesRequest(circuitId, nodes), cancellationToken);
+        var ct = Context.ConnectionAborted;
+        await _circuitService.SyncNodes(new SyncNodesRequest(circuitId, nodes), ct);
 
         await Clients.OthersInGroup(circuitId).SendAsync(
             CircuitHubConstants.NodesUpdatedMethod,
-            nodes
+            nodes,
+            cancellationToken: ct
         );
     }
 
-    public async Task UpdateEdges(string circuitId, List<CircuitEdge> edges, CancellationToken cancellationToken = default)
+    public async Task UpdateEdges(string circuitId, List<CircuitEdge> edges)
     {
-        await _circuitService.SyncEdges(new SyncEdgesRequest(circuitId, edges), cancellationToken);
+        var ct = Context.ConnectionAborted;
+        await _circuitService.SyncEdges(new SyncEdgesRequest(circuitId, edges), ct);
+        
         await Clients.OthersInGroup(circuitId).SendAsync(
             CircuitHubConstants.EdgesUpdatedMethod,
-            edges
+            edges,
+            cancellationToken: ct
+        );
+    }
+
+    public async Task ToggleInput(string circuitId, string nodeId, bool value)
+    {
+        var ct = Context.ConnectionAborted;
+        var circuit = await _circuitService.Get(
+            new GetCircuitRequest(circuitId),
+            ct
+        );
+        if (circuit.Value is null) {
+            return;
+        }
+
+        var node = circuit.Value.Nodes.FirstOrDefault(n => n.Id == nodeId);
+        if (node != null)
+        {
+            node.State ??= new Dictionary<string, object>();
+            node.State["value"] = value;
+
+            var updatedSignalStates = _logicSimulationService.RecalculateCircuit(circuit.Value);
+
+            await Clients.Group(circuitId).SendAsync(
+                CircuitHubConstants.SignalStateUpdated,
+                updatedSignalStates,
+                cancellationToken: ct
+            );
+        }
+    }
+
+    public async Task UpdateSettings(string circuitId, CircuitSettings newSettings)
+    {
+        var ct = Context.ConnectionAborted;
+        var circuit = await _circuitService.Get(
+            new GetCircuitRequest(circuitId),
+            ct
+        );
+        if (circuit.Value is null)
+        {
+            return;
+        }
+
+        circuit.Value.Settings = newSettings;
+
+        await Clients.OthersInGroup(circuitId).SendAsync(
+            CircuitHubConstants.SettingsUpdated,
+            newSettings,
+            cancellationToken: ct
         );
     }
 
@@ -95,49 +152,5 @@ public class CircuitHub : Hub
         }
 
         await base.OnDisconnectedAsync(exception);
-    }
-
-    public async Task ToggleInput(string circuitId, string nodeId, bool value, CancellationToken cancellationToken = default)
-    {
-        var circuit = await _circuitService.Get(
-            new GetCircuitRequest(circuitId),
-            cancellationToken
-        );
-        if (circuit.Value is null) {
-            return;
-        }
-
-        var node = circuit.Value.Nodes.FirstOrDefault(n => n.Id == nodeId);
-        if (node != null)
-        {
-            node.State ??= new Dictionary<string, object>();
-            node.State["value"] = value;
-
-            var updatedSignalStates = _logicSimulationService.RecalculateCircuit(circuit.Value);
-
-            await Clients.Group(circuitId).SendAsync(
-                CircuitHubConstants.SignalStateUpdated,
-                updatedSignalStates
-            );
-        }
-    }
-
-    public async Task UpdateSettings(string circuitId, CircuitSettings newSettings, CancellationToken cancellationToken = default)
-    {
-        var circuit = await _circuitService.Get(
-            new GetCircuitRequest(circuitId),
-            cancellationToken
-        );
-        if (circuit.Value is null)
-        {
-            return;
-        }
-
-        circuit.Value.Settings = newSettings;
-
-        await Clients.OthersInGroup(circuitId).SendAsync(
-            CircuitHubConstants.SettingsUpdated,
-            newSettings
-        );
     }
 }
