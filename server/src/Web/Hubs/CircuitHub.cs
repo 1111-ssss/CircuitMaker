@@ -12,7 +12,7 @@ public class CircuitHub : Hub
     private readonly ILogicSimulationService _logicSimulationService;
 
     public CircuitHub(
-        ICircuitService circuitService, 
+        ICircuitService circuitService,
         ILogicSimulationService logicSimulationService
     )
     {
@@ -51,6 +51,18 @@ public class CircuitHub : Hub
             cancellationToken: ct
         );
 
+        await Clients.Caller.SendAsync(
+            CircuitHubConstants.NodesUpdatedMethod,
+            circuit.Value.Nodes,
+            cancellationToken: ct
+        );
+
+        await Clients.Caller.SendAsync(
+            CircuitHubConstants.EdgesUpdatedMethod,
+            circuit.Value.Edges,
+            cancellationToken: ct
+        );
+
         await Clients.OthersInGroup(circuitId).SendAsync(
             CircuitHubConstants.UserJoinedMethod,
             user,
@@ -68,45 +80,37 @@ public class CircuitHub : Hub
             nodes,
             cancellationToken: ct
         );
+
+        await UpdateSignalStates(circuitId, ct);
     }
 
     public async Task UpdateEdges(string circuitId, List<CircuitEdge> edges)
     {
         var ct = Context.ConnectionAborted;
         await _circuitService.SyncEdges(new SyncEdgesRequest(circuitId, edges), ct);
-        
+
         await Clients.OthersInGroup(circuitId).SendAsync(
             CircuitHubConstants.EdgesUpdatedMethod,
             edges,
             cancellationToken: ct
         );
+
+        await UpdateSignalStates(circuitId, ct);
     }
 
     public async Task ToggleInput(string circuitId, string nodeId, bool value)
     {
         var ct = Context.ConnectionAborted;
-        var circuit = await _circuitService.Get(
-            new GetCircuitRequest(circuitId),
-            ct
-        );
-        if (circuit.Value is null) {
-            return;
-        }
 
-        var node = circuit.Value.Nodes.FirstOrDefault(n => n.Id == nodeId);
-        if (node != null)
+        await UpdateSignalStates(circuitId, ct, circuit =>
         {
-            node.State ??= new Dictionary<string, object>();
-            node.State["value"] = value;
-
-            var updatedSignalStates = _logicSimulationService.RecalculateCircuit(circuit.Value);
-
-            await Clients.Group(circuitId).SendAsync(
-                CircuitHubConstants.SignalStateUpdated,
-                updatedSignalStates,
-                cancellationToken: ct
-            );
-        }
+            var node = circuit.Nodes.FirstOrDefault(n => n.Id == nodeId);
+            if (node != null)
+            {
+                node.State ??= new Dictionary<string, object>();
+                node.State["value"] = value;
+            }
+        });
     }
 
     public async Task UpdateSettings(string circuitId, CircuitSettings newSettings)
@@ -130,13 +134,14 @@ public class CircuitHub : Hub
         );
     }
 
-    public async Task SendCursorPosition(string circuitId, double x, double y)
+    public async Task SendCursorPosition(string circuitId, double x, double y, string userName)
     {
         await Clients.OthersInGroup(circuitId).SendAsync(CircuitHubConstants.CursorMovedMethod, new
         {
             ConnectionId = Context.ConnectionId,
             X = x,
-            Y = y
+            Y = y,
+            UserName = userName
         });
     }
 
@@ -152,5 +157,29 @@ public class CircuitHub : Hub
         }
 
         await base.OnDisconnectedAsync(exception);
+    }
+
+    private async Task UpdateSignalStates(string circuitId, CancellationToken ct = default, Action<Circuit>? nodeAction = null)
+    {
+        var circuit = await _circuitService.Get(
+            new GetCircuitRequest(circuitId),
+            ct
+        );
+        if (circuit.Value is null)
+        {
+            return;
+        }
+
+        if (nodeAction != null)
+        {
+            nodeAction(circuit.Value);
+        }
+
+        var updatedSignalStates = _logicSimulationService.RecalculateCircuit(circuit.Value);
+        await Clients.Group(circuitId).SendAsync(
+            CircuitHubConstants.SignalStateUpdated,
+            updatedSignalStates,
+            cancellationToken: ct
+        );
     }
 }
