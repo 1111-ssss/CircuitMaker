@@ -1,14 +1,14 @@
-using DataAccess.Entities;
+using DAL.Entities;
 
 namespace DAL.Interfaces;
 
 public interface ICircuitRepository
 {
-    Circuit CreateCircuit(string name, string createdBy, CircuitSettings settings);
-    Circuit? GetById(Guid id);
+    Circuit Create(string name, string createdBy, CircuitSettings settings);
+    Circuit? GetById(string id);
     IEnumerable<Circuit> GetAll();
-    bool AddUserToCircuit(Guid circuitId, User user);
-    bool RemoveUserFromCircuit(Guid circuitId, Guid connectionId, out User? removedUser);
-    void UpdateNodes(Guid circuitId, List<CircuitNode> nodes);
-    void UpdateEdges(Guid circuitId, List<CircuitEdge> edges);
+    User? AddUser(string circuitId, User user);
+    bool RemoveUser(string circuitId, string connectionId, out User? removedUser);
+    void UpdateNodes(string circuitId, List<CircuitNode> nodes);
+    void UpdateEdges(string circuitId, List<CircuitEdge> edges);
 }
