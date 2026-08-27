@@ -31,6 +31,8 @@ COPY nginx.conf /etc/nginx/sites-available/default
 RUN mkdir -p /etc/nginx/sites-enabled && ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
 ENV ASPNETCORE_URLS=http://127.0.0.1:5182
+ENV DOTNET_hostBuilder__reloadConfigOnChange=false
+ENV DOTNET_USE_POLLING_FILE_WATCHER=true
 
 EXPOSE 80
 
