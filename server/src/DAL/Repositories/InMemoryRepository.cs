@@ -36,11 +36,11 @@ public class InMemoryRepository : ICircuitRepository
         return _circuits.Values;
     }
 
-    public bool AddUser(string circuitId, User user)
+    public User? AddUser(string circuitId, User user)
     {
         if (!_circuits.TryGetValue(circuitId, out var circuit)) 
         {
-            return false;
+            return null;
         }
 
         lock (circuit)
@@ -48,9 +48,8 @@ public class InMemoryRepository : ICircuitRepository
             user.DisplayName = GenerateUniqueName(circuit, user.RawName);
             user.CurrentCircuitId = circuitId;
             circuit.ConnectedUsers[user.ConnectionId] = user;
+            return user;
         }
-
-        return true;
     }
 
     public bool RemoveUser(string circuitId, string connectionId, out User? removedUser)

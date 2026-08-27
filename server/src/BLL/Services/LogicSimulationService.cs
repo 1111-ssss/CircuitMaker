@@ -1,3 +1,4 @@
+using System.Text.Json;
 using BLL.Interfaces;
 using DAL.Entities;
 
@@ -13,7 +14,7 @@ public class LogicSimulationService : ILogicSimulationService
         {
             var isValueOn = node.State != null && 
                             node.State.TryGetValue("value", out var val) && 
-                            Convert.ToBoolean(val);
+                            GetBooleanValue(val);
             nodeStates[node.Id] = isValueOn;
         }
 
@@ -65,5 +66,39 @@ public class LogicSimulationService : ILogicSimulationService
             "outputNode" => inputs.Any(x => x),
             _ => false
         };
+    }
+
+    private static bool GetBooleanValue(object? value)
+    {
+        if (value is null) 
+        {
+            return false;
+        }
+
+        if (value is bool b)
+        {
+            return b;
+        }
+
+        if (value is JsonElement element)
+        {
+            return element.ValueKind switch
+            {
+                JsonValueKind.True => true,
+                JsonValueKind.False => false,
+                JsonValueKind.Number => element.GetInt32() != 0,
+                JsonValueKind.String => bool.TryParse(element.GetString(), out var parsed) && parsed,
+                _ => false
+            };
+        }
+
+        try
+        {
+            return Convert.ToBoolean(value);
+        }
+        catch
+        {
+            return false;
+        }
     }
 }
